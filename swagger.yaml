@@ -2,29 +2,121 @@ openapi: 3.0.0
 info:
   title: Trucker Profiles API
   version: "1.0.0"
+
 servers:
   - url: /api/v1
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          example: Dayana
+        email:
+          type: string
+          example: dayana@test.com
+        password:
+          type: string
+          example: secret123
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          example: dayana@test.com
+        password:
+          type: string
+          example: secret123
+    WorkerProfileRequest:
+      type: object
+      required: [fullName, positionType, yearsExperience, state]
+      properties:
+        fullName:
+          type: string
+          example: Leonel Leyva
+        positionType:
+          type: string
+          enum: [driver, mechanic, dispatcher, safety, other]
+          example: dispatcher
+        yearsExperience:
+          type: number
+          example: 3
+        state:
+          type: string
+          example: AL
+        availableFrom:
+          type: string
+          format: date-time
+          example: "2026-02-01T00:00:00.000Z"
+
 paths:
   /auth/register:
     post:
       summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
       responses:
         "201":
           description: Created
+        "409":
+          description: Email already exists
+        "400":
+          description: Validation error
+
   /auth/login:
     post:
       summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
       responses:
         "200":
           description: OK
+        "401":
+          description: Invalid credentials
+        "400":
+          description: Missing email/password
+
   /profiles:
     get:
       summary: Get all profiles (auth required)
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
+        "401":
+          description: Unauthorized
     post:
       summary: Create profile (auth required)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkerProfileRequest"
       responses:
         "201":
           description: Created
+        "401":
+          description: Unauthorized
+        "400":
+          description: Validation error
